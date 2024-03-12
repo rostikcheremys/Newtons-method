@@ -1,128 +1,68 @@
 ﻿using System;
 
-class NewtonMethod
-{
-    // Функция, представляющая систему уравнений
-    static double[] F(double[] x)
-    {
-        double[] result = new double[2];
-        result[0] = x[0] * x[0] - 2 * x[0] - x[1] + 0.5;
-        result[1] = x[0] * x[0] + 4 * x[1] * x[1] - 4;
-        return result;
+class NewtonMethod {
+    // Функції системи рівнянь
+    static double Function1(double x1, double x2) {
+        return Math.Sin(x1) - Math.Pow(x2, 2);
     }
 
-    // Матрица Якоби для системы уравнений
-    static double[,] Jacobian(double[] x)
-    {
+    static double Function2(double x1, double x2) {
+        return Math.Pow(Math.Tan(x1), 2) - x2;
+    }
+
+    // Функція для обчислення похідних
+    static double[,] ComputeJacobian(double x1, double x2) {
         double[,] jacobian = new double[2, 2];
-        jacobian[0, 0] = 2 * x[0] - 2;
-        jacobian[0, 1] = -1;
-        jacobian[1, 0] = 2 * x[0];
-        jacobian[1, 1] = 8 * x[1];
+
+        // Похідні по x1
+        jacobian[0, 0] = Math.Cos(x1);
+        jacobian[1, 0] = 2 * Math.Tan(x1) * (1 / Math.Pow(Math.Cos(x1), 2));
+
+        // Похідні по x2
+        jacobian[0, 1] = -2 * x2;
+        jacobian[1, 1] = -1;
+
         return jacobian;
     }
 
-    // Обратная матрица
-    static double[,] InvertMatrix(double[,] matrix)
-    {
-        double det = matrix[0, 0] * matrix[1, 1] - matrix[0, 1] * matrix[1, 0];
+    // Метод Ньютона
+    static void Newton(double x1, double x2, double epsilon = 0.0001, int maxIterations = 100) {
+        int iterations = 0;
+        double deltaX1, deltaX2;
 
-        if (Math.Abs(det) < 0.0001)
-        {
-            throw new Exception("Matrix is singular and cannot be inverted.");
-        }
+        do {
+            // Обчислення матриці Якобі
+            double[,] jacobian = ComputeJacobian(x1, x2);
 
-        double invDet = 1.0 / det;
+            // Обчислення оберненої матриці Якобі
+            double det = jacobian[0, 0] * jacobian[1, 1] - jacobian[0, 1] * jacobian[1, 0];
+            double invDet = 1 / det;
+            double[,] inverseJacobian = {
+                { jacobian[1, 1] * invDet, -jacobian[0, 1] * invDet },
+                { -jacobian[1, 0] * invDet, jacobian[0, 0] * invDet }
+            };
 
-        double[,] inverse = new double[2, 2];
-        inverse[0, 0] = matrix[1, 1] * invDet;
-        inverse[0, 1] = -matrix[0, 1] * invDet;
-        inverse[1, 0] = -matrix[1, 0] * invDet;
-        inverse[1, 1] = matrix[0, 0] * invDet;
+            // Обчислення функцій системи рівнянь
+            double[] functions = { Function1(x1, x2), Function2(x1, x2) };
 
-        return inverse;
+            // Обчислення нового наближення
+            deltaX1 = inverseJacobian[0, 0] * functions[0] + inverseJacobian[0, 1] * functions[1];
+            deltaX2 = inverseJacobian[1, 0] * functions[0] + inverseJacobian[1, 1] * functions[1];
+
+            x1 -= deltaX1;
+            x2 -= deltaX2;
+
+            iterations++;
+        } while ((Math.Abs(deltaX1) > epsilon || Math.Abs(deltaX2) > epsilon) && iterations < maxIterations);
+
+        Console.WriteLine("Корені: x1 = " + x1 + ", x2 = " + x2);
+        Console.WriteLine("Кількість ітерацій: " + iterations);
     }
 
-    // Умножение матрицы на вектор
-    static double[] MultiplyMatrixVector(double[,] matrix, double[] vector)
-    {
-        double[] result = new double[2];
+    static void Main(string[] args) {
+        double initialGuessX1 = 0.74; // Початкове наближення для x1
+        double initialGuessX2 = 0.82; // Початкове наближення для x2
 
-        for (int i = 0; i < 2; i++)
-        {
-            for (int j = 0; j < 2; j++)
-            {
-                result[i] += matrix[i, j] * vector[j];
-            }
-        }
-
-        return result;
-    }
-
-    // Вычитание векторов
-    static double[] SubtractVectors(double[] vector1, double[] vector2)
-    {
-        double[] result = new double[2];
-
-        for (int i = 0; i < 2; i++)
-        {
-            result[i] = vector1[i] - vector2[i];
-        }
-
-        return result;
-    }
-
-    // Норма вектора
-    static double Norm(double[] vector)
-    {
-        double sum = 0.0;
-
-        for (int i = 0; i < 2; i++)
-        {
-            sum += vector[i] * vector[i];
-        }
-
-        return Math.Sqrt(sum);
-    }
-
-    // Метод Ньютона для системы уравнений
-    static double[] NewtonMethodSolver(Func<double[], double[]> F, Func<double[], double[,]> Jacobian, double[] initialGuess, double tolerance = 1e-6, int maxIterations = 100)
-    {
-        double[] x = initialGuess;
-        int iteration = 0;
-
-        while (iteration < maxIterations)
-        {
-            double[] fValues = F(x);
-            double[,] jacobianMatrix = Jacobian(x);
-
-            double[,] inverseJacobian = InvertMatrix(jacobianMatrix);
-
-            double[] deltaX = MultiplyMatrixVector(inverseJacobian, fValues);
-
-            x = SubtractVectors(x, deltaX);
-
-            double norm = Norm(deltaX);
-
-            if (norm < tolerance)
-                break;
-
-            iteration++;
-        }
-
-        return x;
-    }
-
-    static void Main()
-    {
-        // Начальное приближение
-        double[] initialGuess = { 1.0, 1.0 };
-
-        // Решение системы уравнений методом Ньютона
-        double[] result = NewtonMethodSolver(F, Jacobian, initialGuess);
-
-        // Вывод результатов
-        Console.WriteLine("Solution:");
-        Console.WriteLine($"x = {result[0]}, y = {result[1]}");
+        Newton(initialGuessX1, initialGuessX2);
     }
 }

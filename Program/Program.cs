@@ -2,21 +2,24 @@
 
 class NewtonMethod {
     // Функції системи рівнянь
-    static double Function1(double x1, double x2) {
+    static double Function1(double x1, double x2) 
+    {
         return Math.Sin(x1) - Math.Pow(x2, 2);
     }
 
-    static double Function2(double x1, double x2) {
+    static double Function2(double x1, double x2) 
+    {
         return Math.Pow(Math.Tan(x1), 2) - x2;
     }
 
     // Функція для обчислення похідних
-    static double[,] ComputeJacobian(double x1, double x2) {
+    static double[,] ComputeJacobian(double x1, double x2) 
+    {
         double[,] jacobian = new double[2, 2];
 
         // Похідні по x1
         jacobian[0, 0] = Math.Cos(x1);
-        jacobian[1, 0] = 2 * Math.Tan(x1) * (1 / Math.Pow(Math.Cos(x1), 2));
+        jacobian[1, 0] = 2 * Math.Tan(x1) * Math.Pow(Math.Tan(x1), 2) + 1;
 
         // Похідні по x2
         jacobian[0, 1] = -2 * x2;
@@ -27,6 +30,7 @@ class NewtonMethod {
 
     // Метод Ньютона
     static void Newton(double x1, double x2, double epsilon = 0.0001, int maxIterations = 100) {
+        
         int iterations = 0;
         double deltaX1, deltaX2;
 
@@ -36,8 +40,11 @@ class NewtonMethod {
 
             // Обчислення оберненої матриці Якобі
             double det = jacobian[0, 0] * jacobian[1, 1] - jacobian[0, 1] * jacobian[1, 0];
+            
             double invDet = 1 / det;
-            double[,] inverseJacobian = {
+            
+            double[,] inverseJacobian = 
+            {
                 { jacobian[1, 1] * invDet, -jacobian[0, 1] * invDet },
                 { -jacobian[1, 0] * invDet, jacobian[0, 0] * invDet }
             };
@@ -59,9 +66,10 @@ class NewtonMethod {
         Console.WriteLine("Кількість ітерацій: " + iterations);
     }
 
-    static void Main(string[] args) {
-        double initialGuessX1 = 0.74; // Початкове наближення для x1
-        double initialGuessX2 = 0.82; // Початкове наближення для x2
+    static void Main() 
+    {
+        double initialGuessX1 = 0.74; 
+        double initialGuessX2 = 0.82; 
 
         Newton(initialGuessX1, initialGuessX2);
     }

@@ -74,8 +74,8 @@ namespace Program
 
         public static void Main()
         {
-            double x1 = 0.75;
-            double x2 = 0.83;
+            double x1 = 0.74;
+            double x2 = 0.85;
             double epsilon = 0.001;
             
             Newton(x1, x2, epsilon);

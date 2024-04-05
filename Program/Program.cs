@@ -4,6 +4,15 @@ namespace Program
 {
     abstract class Program 
     {
+        public static void Main()
+        {
+            double x1 = 0;
+            double x2 = 0;
+            double epsilon = 0.001;
+
+            Newton(x1, x2, epsilon);
+        }
+        
         // Функції системи рівнянь
         private static double Function1(double x1, double x2) 
         {
@@ -30,19 +39,25 @@ namespace Program
 
             return jacobian;
         }
-
+        
         // Метод Ньютона
         private static void Newton(double x1, double x2, double epsilon) 
         {
             int iterations = 0;
             
             double deltaX1, deltaX2;
-
+            
+            if (!СheckСonvergence(x1, x2))
+            {
+                Console.WriteLine("Початкові дані не збіжні.");
+                return;
+            }
+            
             do 
             {
                 // Обчислення матриці Якобі
                 double[,] jacobian = ComputeJacobian(x1, x2);
-
+                
                 // Обчислення оберненої матриці Якобі
                 double det = jacobian[0, 0] * jacobian[1, 1] - jacobian[0, 1] * jacobian[1, 0];
                 
@@ -71,14 +86,15 @@ namespace Program
             Console.WriteLine("Коренi: x1 = " + x1 + ", x2 = " + x2);
             Console.WriteLine("Кiлькiсть iтерацiй: " + iterations);
         }
-
-        public static void Main()
+        
+        private static bool СheckСonvergence(double x1, double x2)
         {
-            double x1 = 1;
-            double x2 = 1;
-            double epsilon = 0.001;
+            double[,] jacobian = ComputeJacobian(x1, x2);
+
+            double convergence1 = Math.Abs(jacobian[0, 0]) + Math.Abs(jacobian[0, 1]);
+            double convergence2 = Math.Abs(jacobian[1, 0]) + Math.Abs(jacobian[1, 1]);
             
-            Newton(x1, x2, epsilon);
+            return convergence1 <= 1 & convergence2 <= 1;
         }
     }
 }

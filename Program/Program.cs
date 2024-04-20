@@ -4,6 +4,8 @@ namespace Program
 {
     abstract class Program 
     {
+        private delegate double EquationFunction(double x1, double x2);
+        
         public static void Main()
         {
             double x1 = 0;
@@ -28,16 +30,41 @@ namespace Program
         private static double[,] ComputeJacobian(double x1, double x2) 
         {
             double[,] jacobian = new double[2, 2];
+            
+            double df1_dx1 = PartialDerivativeX1(Function1, x1,x2);
+            double df1_dx2 = PartialDerivativeX2(Function1, x1, x2);
+            double df2_dx1 = PartialDerivativeX1(Function2, x1, x2);
+            double df2_dx2 = PartialDerivativeX2(Function2, x1, x2);
 
+            Console.WriteLine($"Частиннi похiднi:\ndf1_dx1: {df1_dx1}\ndf1_dx2: {df1_dx2}\ndf2_dx1: {df2_dx1}\ndf2_dx2: {df2_dx2}\n");
+            
             // Похідні по x1
-            jacobian[0, 0] = Math.Cos(x1);
-            jacobian[1, 0] = 2 * Math.Tan(x1) * (1 / Math.Pow(Math.Cos(x1), 2));
+            jacobian[0, 0] = df1_dx1;
+            jacobian[1, 0] = df1_dx2;
 
             // Похідні по x2
-            jacobian[0, 1] = -2 * x2;
-            jacobian[1, 1] = -1;
+            jacobian[0, 1] = df2_dx1;
+            jacobian[1, 1] = df2_dx2;
 
             return jacobian;
+        }
+        
+        // Частинні похідні
+        static double PartialDerivativeX1(EquationFunction f, double x1, double x2, double h = 0.05)
+        {
+            return (f(x1 + h, x2) - f(x1, x2)) / h;
+        }
+       
+        static double PartialDerivativeX2(EquationFunction f, double x1, double x2, double h = 0.05)
+        {
+            return (f(x1, x2 + h) - f(x1, x2)) / h;
+        }
+        
+        // Перевірка збіжності
+        private static bool Convergence(double x1, double x2)
+        {
+            return Math.Abs(PartialDerivativeX1(Function1, x1, x2) + PartialDerivativeX2(Function1, x1, x2)) < 1 &&
+                   Math.Abs(PartialDerivativeX1(Function2, x1, x2) + PartialDerivativeX2(Function2, x1, x2)) < 1;
         }
         
         // Метод Ньютона
@@ -47,7 +74,7 @@ namespace Program
             
             double deltaX1, deltaX2;
             
-            if (!СheckСonvergence(x1, x2))
+            if (!Convergence(x1, x2))
             {
                 Console.WriteLine("Початкові дані не збіжні.");
                 return;
@@ -85,16 +112,6 @@ namespace Program
             
             Console.WriteLine("Коренi: x1 = " + x1 + ", x2 = " + x2);
             Console.WriteLine("Кiлькiсть iтерацiй: " + iterations);
-        }
-        
-        private static bool СheckСonvergence(double x1, double x2)
-        {
-            double[,] jacobian = ComputeJacobian(x1, x2);
-
-            double convergence1 = Math.Abs(jacobian[0, 0]) + Math.Abs(jacobian[0, 1]);
-            double convergence2 = Math.Abs(jacobian[1, 0]) + Math.Abs(jacobian[1, 1]);
-            
-            return convergence1 <= 1 & convergence2 <= 1;
         }
     }
 }
